@@ -1,39 +1,24 @@
 :9090 {
-    basicauth / {$ADMIN_USER} {$ADMIN_PASSWORD}
-    proxy / prometheus:9090 {
-            transparent
+        basicauth /secret {
+                {$ADMIN_USER} {$ADMIN_CADDY_PASSWORD}
         }
 
-    errors stderr
-    tls off
-}
-
-:9093 {
-    basicauth / {$ADMIN_USER} {$ADMIN_PASSWORD}
-    proxy / alertmanager:9093 {
-            transparent
+        reverse_proxy / prometheus:9090 {
+                header_up Host {host}
         }
 
-    errors stderr
-    tls off
-}
-
-:9094 {
-    basicauth / {$ADMIN_USER} {$ADMIN_PASSWORD}
-    proxy / unsee:8080 {
-            transparent
+        handle_errors {
+                respond "{err.status_code} {err.status_text}"
         }
-
-    errors stderr
-    tls off
 }
 
 :3000 {
-    proxy / grafana:3000 {
-            transparent
-            websocket
+        reverse_proxy / grafana:3000 {
+                header_up Host {host}
+                header_up X-Real-IP {remote_host}
         }
 
-    errors stderr
-    tls off
+        handle_errors {
+                respond "{err.status_code} {err.status_text}"
+        }
 }

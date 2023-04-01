@@ -1,0 +1,107 @@
+variables:
+  STACK_VERSION:
+    value: "$CI_COMMIT_REF_SLUG"
+    description: Version de la stack (et des images à construire)
+
+############################
+## TEMPLATES
+############################
+
+.build-image:
+  stage: build
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:23.0.1-git
+  services:
+    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:23.0.1-dind
+      alias: docker
+  variables:
+    IMAGE_NAME: "XXX"
+  before_script:
+    - chmod +x -R ./$IMAGE_NAME
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker buildx create --use --name multi-arch-builder --driver-opt network=host --driver-opt image=moby/buildkit:v0.10.6
+  script:
+    - docker buildx build --platform linux/amd64,linux/arm64 -t $CI_REGISTRY_IMAGE/$IMAGE_NAME:$STACK_VERSION -f $IMAGE_NAME/Dockerfile --push ./$IMAGE_NAME
+  after_script:
+    - docker logout
+
+############################
+## JOBS
+############################
+
+initialize:
+  stage: .pre
+  script:
+    - |
+      echo "STACK_VERSION=$STACK_VERSION"
+      if [ -z "$STACK_VERSION" ]
+      then
+        echo -e "\033[0;31mERROR: CI_COMMIT_REF_SLUG is not set\033[0m"
+        exit 1
+      fi
+
+build-caddy:
+  extends: .build-image
+  variables:
+    IMAGE_NAME: "caddy"
+
+build-cadvisor:
+  extends: .build-image
+  variables:
+    IMAGE_NAME: "cadvisor"
+
+build-grafana:
+  extends: .build-image
+  variables:
+    IMAGE_NAME: "grafana"
+
+build-node-exporter:
+  extends: .build-image
+  variables:
+    IMAGE_NAME: "node-exporter"
+
+build-prometheus:
+  extends: .build-image
+  variables:
+    IMAGE_NAME: "prometheus"
+
+#deploy-stack:
+#  stage: deploy
+#  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:23.0.1
+#  variables:
+#    ## GLOBAL ##
+#    DOMAIN: papierpain.fr
+#    ADMIN_USER: ${ADMIN_USER}
+#    ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+#    ## CADDY ##
+#    ADMIN_CADDY_PASSWORD: ${ADMIN_CADDY_PASSWORD}
+#    ## PROMETHEUS ##
+#    #PROMETHEUS_RETENTION: XXX
+#    ## SLACK ##
+#    #SLACK_URL: XXX
+#    #SLACK_CHANNEL: XXX
+#    #SLACK_USER: XXX
+#    ## GRAFANA ##
+#    GF_SMTP_ENABLED: "true"
+#    GF_SMTP_FROM_ADDRESS: ${GF_SMTP_MAIL}
+#    GF_SMTP_FROM_NAME: "Grafana - PapierPain"
+#    GF_SMTP_HOST: "smtp-mail.outlook.com:587"
+#    GF_SMTP_USER: ${GF_SMTP_MAIL}
+#    GF_SMTP_PASSWORD: ${GF_SMTP_PASSWORD}
+#  before_script:
+#    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+#  script:
+#    - docker stack deploy -c monitoring.docker-compose.yml --prune --with-registry-auth ${CI_PROJECT_NAME}
+#  environment:
+#    name: production
+#    url: https://grafana.papierpain.fr
+
+############################
+## WORKFLOW
+############################
+
+workflow:
+  name: Build multi-plateform images - v$STACK_VERSION
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "web"
+      when: always
+    - when: never

@@ -1,11 +1,6 @@
 # Monitoring
 
-Swarmprom is a starter kit for Docker Swarm monitoring with [Prometheus](https://prometheus.io/),
-[Grafana](http://grafana.org/),
-[cAdvisor](https://github.com/google/cadvisor),
-[Node Exporter](https://github.com/prometheus/node_exporter),
-[Alert Manager](https://github.com/prometheus/alertmanager)
-and [Unsee](https://github.com/cloudflare/unsee).
+Swarmprom is a starter kit for Docker Swarm monitoring with [Prometheus](https://prometheus.io/), [Grafana](http://grafana.org/), [cAdvisor](https://github.com/google/cadvisor), [Node Exporter](https://github.com/prometheus/node_exporter), [Alert Manager](https://github.com/prometheus/alertmanager) and [Unsee](https://github.com/cloudflare/unsee).
 
 ## Install
 
@@ -36,8 +31,8 @@ Services:
 * node-exporter (host metrics collector)
 * cadvisor (containers metrics collector)
 * dockerd-exporter (Docker daemon metrics collector, requires Docker experimental metrics-addr to be enabled)
-* alertmanager (alerts dispatcher) `http://<swarm-ip>:9093`
-* unsee (alert manager dashboard) `http://<swarm-ip>:9094`
+<!-- * alertmanager (alerts dispatcher) `http://<swarm-ip>:9093` -->
+<!-- * unsee (alert manager dashboard) `http://<swarm-ip>:9094` -->
 * caddy (reverse proxy and basic auth provider for prometheus, alertmanager and unsee)
 
 
