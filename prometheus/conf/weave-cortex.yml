@@ -8,7 +8,7 @@ global:
   evaluation_interval: 15s
 
   external_labels:
-    monitor: 'promswarm'
+    monitor: 'monitoring'
 
 scrape_configs:
   - job_name: 'prometheus'
