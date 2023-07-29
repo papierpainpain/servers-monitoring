@@ -1,139 +1,131 @@
 version: "3.3"
 
 networks:
-  net:
-    driver: overlay
-    attachable: true
-  traefik-public:
+  cloud-public:
     external: true
+  cloud-camembert:
+  cloud-monitoring:
 
 volumes:
-    prometheus: {}
-    grafana: {}
+  prometheus: {}
+  grafana: {}
+
+configs:
+  prometheus-config:
+    file: prometheus/prometheus.yml
 
 services:
-  dockerd-exporter:
-    image: registry.papierpain.fr/swarm/monitoring/caddy:${STACK_VERSION:-latest}
-    networks:
-      - net
+  dockerproxy:
+    image: tecnativa/docker-socket-proxy
     environment:
-      - DOCKER_GWBRIDGE_IP=172.18.0.1
-    deploy:
-      mode: global
-      resources:
-        limits:
-          memory: 128M
-        reservations:
-          memory: 64M
+      - CONTAINERS=1
+      - EXEC=1
+      - IMAGES=1
+      - INFO=1
+      - NETWORKS=1
+      - NODES=1
+      - SERVICES=1
+      - SWARM=1
+      - SYSTEM=1
+      - TASKS=1
+      - VOLUMES=1
+    networks:
+      - cloud-monitoring
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
 
   cadvisor:
-    image: registry.papierpain.fr/swarm/monitoring/cadvisor:${STACK_VERSION:-latest}
-    networks:
-      - net
-    command: -logtostderr -docker_only
+    image: gcr.io/cadvisor/cadvisor:v0.47.2
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /:/rootfs:ro
       - /var/run:/var/run
       - /sys:/sys:ro
-      - /var/lib/docker/:/var/lib/docker:ro
-    deploy:
-      mode: global
-      resources:
-        limits:
-          memory: 128M
-        reservations:
-          memory: 64M
-    privileged: true
-
-  grafana:
-    image: registry.papierpain.fr/swarm/monitoring/grafana:${STACK_VERSION:-latest}
+      - /var/lib/docker:/var/lib/docker:ro
+      - /etc/machine-id:/etc/machine-id:ro
+    privileged: true # TODO: Ne sert à rien dans swarm (pour l'instant), MR en cours chez Docker (peut-être pour jamais)
+    # devices: # TODO: Attendre la prochaine release de Docker pour avoir accès à kmsg pour raspi 4
+    #   - /dev/kmsg:/dev/kmsg
     networks:
-      - default
-      - net
-      - traefik-public
-    environment:
-      - GF_SECURITY_ADMIN_USER=${ADMIN_USER:-admin}
-      - GF_SECURITY_ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
-      - GF_USERS_ALLOW_SIGN_UP=false
-      # - GF_SERVER_ROOT_URL=${GF_SERVER_ROOT_URL:-localhost}
-      - GF_SMTP_ENABLED=${GF_SMTP_ENABLED:-false}
-      - GF_SMTP_FROM_ADDRESS=${GF_SMTP_FROM_ADDRESS:-grafana@test.com}
-      - GF_SMTP_FROM_NAME=${GF_SMTP_FROM_NAME:-Grafana}
-      - GF_SMTP_HOST=${GF_SMTP_HOST:-smtp:25}
-      - GF_SMTP_USER=${GF_SMTP_USER}
-      - GF_SMTP_PASSWORD=${GF_SMTP_PASSWORD}
-    volumes:
-      - grafana:/var/lib/grafana
+      - cloud-monitoring
     deploy:
       mode: replicated
       replicas: 1
       placement:
         constraints:
           - node.role == manager
-      resources:
-        limits:
-          memory: 128M
-        reservations:
-          memory: 64M
       labels:
-        - traefik.enable=true
-        - traefik.docker.network=traefik-public
-        - traefik.constraint-label=traefik-public
-        - traefik.http.routers.swarmprom-grafana-http.rule=Host(`grafana.${DOMAIN?Variable not set}`)
-        - traefik.http.routers.swarmprom-grafana-http.entrypoints=http
-        - traefik.http.routers.swarmprom-grafana-http.middlewares=https-redirect
-        - traefik.http.routers.swarmprom-grafana-https.rule=Host(`grafana.${DOMAIN?Variable not set}`)
-        - traefik.http.routers.swarmprom-grafana-https.entrypoints=https
-        - traefik.http.routers.swarmprom-grafana-https.tls=true
-        - traefik.http.routers.swarmprom-grafana-https.tls.certresolver=le
-        - traefik.http.services.swarmprom-grafana.loadbalancer.server.port=3000
+        prometheus-job: cadvisor
 
-  node-exporter:
-    image: registry.papierpain.fr/swarm/monitoring/node-exporter:${STACK_VERSION:-latest}
-    networks:
-      - net
-    environment:
-      - NODE_ID={{.Node.ID}}
+  nodeexporter:
+    image: prom/node-exporter:v1.6.1
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
       - /:/rootfs:ro
-      - /etc/hostname:/etc/nodename
-    command:
-      - '--path.sysfs=/host/sys'
-      - '--path.procfs=/host/proc'
-      - '--collector.textfile.directory=/etc/node-exporter/'
-      - '--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)'
-      - '--no-collector.ipvs'
-    deploy:
-      mode: global
-      resources:
-        limits:
-          memory: 128M
-        reservations:
-          memory: 64M
+    networks:
+      - cloud-monitoring
 
   prometheus:
-    image: registry.papierpain.fr/swarm/monitoring/prometheus:${STACK_VERSION:-latest}
+    image: prom/prometheus:v2.46.0
     networks:
-      - default
-      - net
-      - traefik-public
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--storage.tsdb.retention=${PROMETHEUS_RETENTION:-24h}'
+      - cloud-camembert
+      - cloud-monitoring
+      - cloud-public # TODO: Remove this
     volumes:
       - prometheus:/prometheus
+    configs:
+      - source: prometheus-config
+        target: /etc/prometheus/prometheus.yml
     deploy:
       mode: replicated
       replicas: 1
       placement:
         constraints:
           - node.role == manager
-      resources:
-        limits:
-          memory: 2048M
-        reservations:
-          memory: 128M
+
+  grafana:
+    image: ${GRAFANA_IMAGE}
+    networks:
+      - cloud-camembert
+      - cloud-public
+    volumes:
+      - grafana:/var/lib/grafana
+    environment:
+      - GF_DEFAULT_INSTANCE_NAME=Camembert
+      - GF_AUTH_LDAP_ENABLED=true
+      - GF_AUTH_LDAP_CONFIG_FILE=/etc/grafana/ldap.toml
+      - GF_AUTH_LDAP_ALLOW_SIGN_UP=true
+      - LDAP_HOST=${LDAP_HOST}
+      - LDAP_BIND_DN=${LDAP_ADMIN_USER}
+      - LDAP_BIND_PASSWORD=${LDAP_ADMIN_PASS}
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/general/swarm.json
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-piechart-panel
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=cloud-public
+        - traefik.constraint-label=cloud-public
+
+        ## HTTP ##
+        - traefik.http.routers.monitoring.entrypoints=web
+        - traefik.http.routers.monitoring.rule=Host(`${DOMAIN?Variable not set}`)
+        - traefik.http.routers.monitoring.middlewares=monitoring-redirect
+        # middlewares
+        - traefik.http.middlewares.monitoring-redirect.redirectscheme.scheme=https
+        - traefik.http.middlewares.monitoring-redirect.redirectscheme.permanent=true
+
+        ## HTTPS ##
+        - traefik.http.routers.monitoring-https.entrypoints=websecure
+        - traefik.http.routers.monitoring-https.rule=Host(`${DOMAIN?Variable not set}`)
+        - traefik.http.routers.monitoring-https.tls=true
+        - traefik.http.routers.monitoring-https.tls.certresolver=letsencrypt
+        - traefik.http.routers.monitoring-https.tls.options=default
+
+        ## LOADBALANCER ##
+        - traefik.http.services.monitoring-https.loadbalancer.server.port=3000

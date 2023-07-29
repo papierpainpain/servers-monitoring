@@ -1,0 +1,9 @@
+apiVersion: 1
+
+providers:
+  - name: General
+    type: file
+    updateIntervalSeconds: 30
+    overwrite: true
+    options:
+      path: /var/lib/grafana/dashboards/general

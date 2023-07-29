@@ -1,0 +1,41 @@
+[[servers]]
+host = '$__env{LDAP_HOST}'
+port = 389
+use_ssl = false
+start_tls = false
+ssl_skip_verify = false
+
+# Search user bind
+bind_dn = '$__env{LDAP_BIND_DN}'
+bind_password = '$__env{LDAP_BIND_PASSWORD}'
+
+# User search filter
+search_base_dns = ["dc=papierpain,dc=fr"]
+search_filter = "(uid=%s)"
+
+# Specify names of the ldap attributes your ldap uses
+[servers.attributes]
+name = "cn"
+surname = "uid"
+username = "sn"
+email =  "mail"
+member_of = "memberOf"
+
+# Map ldap groups to grafana org roles
+[[servers.group_mappings]]
+group_dn = '$__env{LDAP_BIND_DN}'
+org_role = "Admin"
+grafana_admin = true
+
+[[servers.group_mappings]]
+group_dn = "cn=admin,ou=groups,dc=papierpain,dc=fr"
+org_role = "Admin"
+grafana_admin = true
+
+[[servers.group_mappings]]
+group_dn = "ou=users,dc=papierpain,dc=fr"
+org_role = "Editor"
+
+[[servers.group_mappings]]
+group_dn = "*"
+org_role = "Viewer"

@@ -1,107 +1,102 @@
 variables:
-  STACK_VERSION:
-    value: "$CI_COMMIT_REF_SLUG"
-    description: Version de la stack (et des images à construire)
+  VERSION:
+    value: $CI_COMMIT_REF_SLUG
+    description: Version de la stack
+  GRAFANA_IMAGE_DEV: $CI_REGISTRY_IMAGE/test/grafana
+  GRAFANA_IMAGE_PROD: $CI_REGISTRY_IMAGE/grafana
+
+include:
+  - project: "labo/cicd-templates"
+    ref: master
+    file:
+      - "/templates/deploy-swarm.gitlab-ci.yml"
 
 ############################
-## TEMPLATES
+## JOBS
 ############################
 
-.build-image:
+build-grafana:
   stage: build
   image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:23.0.1-git
   services:
     - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:23.0.1-dind
       alias: docker
   variables:
-    IMAGE_NAME: "XXX"
+    PLATFORMS: "linux/arm64"
+    DOCKERFILE: grafana/Dockerfile
+    BUILD_PATH: grafana
   before_script:
-    - chmod +x -R ./$IMAGE_NAME
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker run --privileged --rm tonistiigi/binfmt --install all
     - docker buildx create --use --name multi-arch-builder --driver-opt network=host --driver-opt image=moby/buildkit:v0.10.6
   script:
-    - docker buildx build --platform linux/amd64,linux/arm64 -t $CI_REGISTRY_IMAGE/$IMAGE_NAME:$STACK_VERSION -f $IMAGE_NAME/Dockerfile --push ./$IMAGE_NAME
+    - docker buildx build --platform ${PLATFORMS} ${TAGS} -f ${DOCKERFILE} --push ${BUILD_PATH}
   after_script:
     - docker logout
+    - docker buildx rm multi-arch-builder
+  rules: # Tags de l'image
+    - if: $VERSION =~ /^v[0-9]+\.[0-9]+\.[0-9]+$/ || $VERSION =~ /^[0-9]+\.[0-9]+\.[0-9]+$/
+      variables:
+        TAGS: -t ${GRAFANA_IMAGE_PROD}:${VERSION} -t ${GRAFANA_IMAGE_PROD}:stable
+    - if: $VERSION != ""
+      variables:
+        TAGS: -t ${GRAFANA_IMAGE_DEV}:${VERSION}
+    - if: $CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+$/
+      variables:
+        TAGS: -t ${GRAFANA_IMAGE_PROD}:$CI_COMMIT_TAG -t ${GRAFANA_IMAGE_PROD}:stable
+    - if: $CI_COMMIT_REF_NAME == "master"
+      variables:
+        TAGS: -t ${GRAFANA_IMAGE_PROD}:latest
+    - if: $CI_COMMIT_TAG
+      variables:
+        TAGS: -t ${GRAFANA_IMAGE_DEV}:$CI_COMMIT_TAG
+    - if: $CI_COMMIT_REF_NAME && $CI_COMMIT_REF_NAME != "master"
+      variables:
+        TAGS: -t ${GRAFANA_IMAGE_DEV}:$CI_COMMIT_REF_NAME
 
-############################
-## JOBS
-############################
-
-initialize:
-  stage: .pre
-  script:
-    - |
-      echo "STACK_VERSION=$STACK_VERSION"
-      if [ -z "$STACK_VERSION" ]
-      then
-        echo -e "\033[0;31mERROR: CI_COMMIT_REF_SLUG is not set\033[0m"
-        exit 1
-      fi
-
-build-caddy:
-  extends: .build-image
+deploy-stack:
+  extends: .template-deploy-stack
   variables:
-    IMAGE_NAME: "caddy"
-
-build-cadvisor:
-  extends: .build-image
-  variables:
-    IMAGE_NAME: "cadvisor"
-
-build-grafana:
-  extends: .build-image
-  variables:
-    IMAGE_NAME: "grafana"
-
-build-node-exporter:
-  extends: .build-image
-  variables:
-    IMAGE_NAME: "node-exporter"
-
-build-prometheus:
-  extends: .build-image
-  variables:
-    IMAGE_NAME: "prometheus"
-
-#deploy-stack:
-#  stage: deploy
-#  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:23.0.1
-#  variables:
-#    ## GLOBAL ##
-#    DOMAIN: papierpain.fr
-#    ADMIN_USER: ${ADMIN_USER}
-#    ADMIN_PASSWORD: ${ADMIN_PASSWORD}
-#    ## CADDY ##
-#    ADMIN_CADDY_PASSWORD: ${ADMIN_CADDY_PASSWORD}
-#    ## PROMETHEUS ##
-#    #PROMETHEUS_RETENTION: XXX
-#    ## SLACK ##
-#    #SLACK_URL: XXX
-#    #SLACK_CHANNEL: XXX
-#    #SLACK_USER: XXX
-#    ## GRAFANA ##
-#    GF_SMTP_ENABLED: "true"
-#    GF_SMTP_FROM_ADDRESS: ${GF_SMTP_MAIL}
-#    GF_SMTP_FROM_NAME: "Grafana - PapierPain"
-#    GF_SMTP_HOST: "smtp-mail.outlook.com:587"
-#    GF_SMTP_USER: ${GF_SMTP_MAIL}
-#    GF_SMTP_PASSWORD: ${GF_SMTP_PASSWORD}
-#  before_script:
-#    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-#  script:
-#    - docker stack deploy -c monitoring.docker-compose.yml --prune --with-registry-auth ${CI_PROJECT_NAME}
-#  environment:
-#    name: production
-#    url: https://grafana.papierpain.fr
+    DOMAIN: camembert.papierpain.fr
+    DOCKER_COMPOSE_FILE: monitoring.docker-compose.yml
+    INTERNAL_REGISTRY: "true"
+  environment:
+    name: production
+    url: https://camembert.papierpain.fr
+  rules: # Tags de l'image
+    - if: $VERSION =~ /^v[0-9]+\.[0-9]+\.[0-9]+$/ || $VERSION =~ /^[0-9]+\.[0-9]+\.[0-9]+$/ || $CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+$/
+      variables:
+        GRAFANA_IMAGE: ${GRAFANA_IMAGE_PROD}:stable
+    - if: $VERSION != ""
+      variables:
+        GRAFANA_IMAGE: ${GRAFANA_IMAGE_DEV}:${VERSION}
+    - if: $CI_COMMIT_REF_NAME == "master"
+      variables:
+        GRAFANA_IMAGE: ${GRAFANA_IMAGE_PROD}:latest
+    - if: $CI_COMMIT_TAG
+      variables:
+        GRAFANA_IMAGE: ${GRAFANA_IMAGE_DEV}:$CI_COMMIT_TAG
+    - if: $CI_COMMIT_REF_NAME && $CI_COMMIT_REF_NAME != "master"
+      variables:
+        GRAFANA_IMAGE: ${GRAFANA_IMAGE_DEV}:$CI_COMMIT_REF_NAME
 
 ############################
 ## WORKFLOW
 ############################
 
 workflow:
-  name: Build multi-plateform images - v$STACK_VERSION
+  name: ${PIPELINE_NAME}
   rules:
-    - if: $CI_PIPELINE_SOURCE == "web"
-      when: always
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+      variables:
+        PIPELINE_NAME: 🚀 [PROD] Nouveau camembert bien frais !
+    - if: $CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+$/
+      variables:
+        PIPELINE_NAME: 💥 [PROD] Camembert $CI_COMMIT_TAG (stable)
+    - if: $CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_TAG
+      variables:
+        PIPELINE_NAME: 🚚 [DEV] Affinage du camembert (tag) $CI_COMMIT_TAG
+    - if: $CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_REF_NAME && $CI_COMMIT_REF_NAME != "master"
+      variables:
+        PIPELINE_NAME: 🚚 [DEV] Caillage du camembert $CI_COMMIT_REF_NAME
     - when: never
