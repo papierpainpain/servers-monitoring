@@ -18,14 +18,12 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 8,
   "links": [],
-  "liveNow": false,
   "panels": [
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
+        "uid": "${DATA_SOURCE}"
       },
       "gridPos": {
         "h": 11,
@@ -35,7 +33,8 @@
       },
       "id": 1,
       "options": {
-        "folderId": 0,
+        "includeVars": false,
+        "keepTime": false,
         "maxItems": -1,
         "query": "",
         "showHeadings": false,
@@ -44,14 +43,28 @@
         "showStarred": false,
         "tags": []
       },
-      "pluginVersion": "9.5.6",
+      "pluginVersion": "10.4.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DATA_SOURCE}"
+          },
+          "editorMode": "code",
+          "expr": "avg(node_filesystem_size_bytes{job=\"bananas\", fstype=\"ext4\"})",
+          "instant": false,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A"
+        }
+      ],
       "title": "Liste des dashboards",
       "type": "dashlist"
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
+        "uid": "${DATA_SOURCE}"
       },
       "fieldConfig": {
         "defaults": {
@@ -79,7 +92,7 @@
         "y": 0
       },
       "hideTimeOverride": true,
-      "id": 10,
+      "id": 2,
       "interval": "1h",
       "options": {
         "colorMode": "value",
@@ -87,18 +100,22 @@
         "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "9.5.6",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "uid": "${DATA_SOURCE}"
           },
           "editorMode": "code",
           "expr": "avg(node_filesystem_size_bytes{job=\"bananas\", fstype=\"ext4\"})",
@@ -109,7 +126,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "uid": "${DATA_SOURCE}"
           },
           "editorMode": "code",
           "expr": "avg(node_filesystem_size_bytes{job=\"nasticot\", fstype=\"ext4\"})",
@@ -126,7 +143,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
+        "uid": "${DATA_SOURCE}"
       },
       "fieldConfig": {
         "defaults": {
@@ -158,24 +175,29 @@
         "y": 0
       },
       "hideTimeOverride": true,
-      "id": 4,
+      "id": 3,
       "interval": "4m",
       "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
         "showThresholdLabels": false,
-        "showThresholdMarkers": true
+        "showThresholdMarkers": true,
+        "sizing": "auto"
       },
-      "pluginVersion": "9.5.6",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "uid": "${DATA_SOURCE}"
           },
           "editorMode": "code",
           "expr": "sum(rate(node_cpu_seconds_total{job=\"nasticot\", mode!=\"idle\"}[$__rate_interval])) / on(instance) group_left sum(rate(node_cpu_seconds_total{job=\"nasticot\"}[$__rate_interval])) * 100",
@@ -186,7 +208,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "uid": "${DATA_SOURCE}"
           },
           "editorMode": "code",
           "expr": "sum(rate(node_cpu_seconds_total{job=\"bananas\", mode!=\"idle\"}[$__rate_interval])) / on(instance) group_left sum(rate(node_cpu_seconds_total{job=\"bananas\"}[$__rate_interval])) * 100",
@@ -203,7 +225,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
+        "uid": "${DATA_SOURCE}"
       },
       "description": "Total number of CPU cores",
       "fieldConfig": {
@@ -228,8 +250,7 @@
         "x": 17,
         "y": 0
       },
-      "id": 6,
-      "links": [],
+      "id": 5,
       "maxDataPoints": 100,
       "options": {
         "colorMode": "value",
@@ -237,18 +258,22 @@
         "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "9.5.6",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "uid": "${DATA_SOURCE}"
           },
           "editorMode": "code",
           "expr": "count(count(node_cpu_seconds_total{job=\"nasticot\"}) by (cpu))",
@@ -262,7 +287,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "uid": "${DATA_SOURCE}"
           },
           "editorMode": "code",
           "expr": "count(count(node_cpu_seconds_total{job=\"bananas\"}) by (cpu))",
@@ -278,7 +303,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
+        "uid": "${DATA_SOURCE}"
       },
       "description": "Total RAM",
       "fieldConfig": {
@@ -304,8 +329,7 @@
         "x": 19,
         "y": 0
       },
-      "id": 7,
-      "links": [],
+      "id": 6,
       "maxDataPoints": 100,
       "options": {
         "colorMode": "value",
@@ -313,18 +337,22 @@
         "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "9.5.6",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "uid": "${DATA_SOURCE}"
           },
           "editorMode": "code",
           "expr": "node_memory_MemTotal_bytes{job=\"nasticot\"}",
@@ -338,7 +366,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "uid": "${DATA_SOURCE}"
           },
           "editorMode": "code",
           "expr": "node_memory_MemTotal_bytes{job=\"bananas\"}",
@@ -354,7 +382,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
+        "uid": "${DATA_SOURCE}"
       },
       "fieldConfig": {
         "defaults": {
@@ -392,24 +420,29 @@
         "x": 12,
         "y": 6
       },
-      "id": 5,
+      "id": 4,
       "interval": "1m",
       "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
         "showThresholdLabels": false,
-        "showThresholdMarkers": true
+        "showThresholdMarkers": true,
+        "sizing": "auto"
       },
-      "pluginVersion": "9.5.6",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "uid": "${DATA_SOURCE}"
           },
           "editorMode": "code",
           "expr": "(node_memory_MemTotal_bytes{job=\"nasticot\"} - node_memory_MemAvailable_bytes{job=\"nasticot\"}) / node_memory_MemTotal_bytes{job=\"nasticot\"}",
@@ -420,7 +453,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "uid": "${DATA_SOURCE}"
           },
           "editorMode": "code",
           "expr": "(node_memory_MemTotal_bytes{job=\"bananas\"} - node_memory_MemAvailable_bytes{job=\"bananas\"}) / node_memory_MemTotal_bytes{job=\"bananas\"}",
@@ -436,7 +469,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
+        "uid": "${DATA_SOURCE}"
       },
       "description": "System uptime",
       "fieldConfig": {
@@ -462,8 +495,7 @@
         "x": 17,
         "y": 7
       },
-      "id": 8,
-      "links": [],
+      "id": 7,
       "maxDataPoints": 100,
       "options": {
         "colorMode": "value",
@@ -471,18 +503,22 @@
         "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "9.5.6",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "uid": "${DATA_SOURCE}"
           },
           "editorMode": "code",
           "expr": "node_time_seconds{job=\"nasticot\"} - node_boot_time_seconds{job=\"nasticot\"}",
@@ -496,7 +532,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "uid": "${DATA_SOURCE}"
           },
           "editorMode": "code",
           "expr": "node_time_seconds{job=\"bananas\"} - node_boot_time_seconds{job=\"bananas\"}",
@@ -512,7 +548,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
+        "uid": "${DATA_SOURCE}"
       },
       "fieldConfig": {
         "defaults": {
@@ -540,31 +576,36 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 10,
+        "h": 9,
         "w": 12,
         "x": 0,
         "y": 11
       },
-      "id": 9,
+      "id": 8,
       "options": {
         "displayMode": "lcd",
+        "maxVizHeight": 300,
         "minVizHeight": 10,
         "minVizWidth": 0,
+        "namePlacement": "auto",
         "orientation": "horizontal",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
         "showUnfilled": true,
+        "sizing": "auto",
         "valueMode": "color"
       },
-      "pluginVersion": "9.5.6",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "uid": "${DATA_SOURCE}"
           },
           "editorMode": "code",
           "expr": "(avg(node_filesystem_size_bytes{job=\"bananas\", device=\"/dev/root\"}) - avg(node_filesystem_avail_bytes{job=\"bananas\", device=\"/dev/root\"})) / avg(node_filesystem_size_bytes{job=\"bananas\", device=\"/dev/root\"})",
@@ -575,7 +616,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "uid": "${DATA_SOURCE}"
           },
           "editorMode": "code",
           "expr": "(avg(node_filesystem_size_bytes{job=\"nasticot\", fstype=\"ext4\"}) - avg(node_filesystem_avail_bytes{job=\"nasticot\", fstype=\"ext4\"})) / avg(node_filesystem_size_bytes{job=\"nasticot\", fstype=\"ext4\"})",
@@ -591,7 +632,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
+        "uid": "${DATA_SOURCE}"
       },
       "fieldConfig": {
         "defaults": {
@@ -625,13 +666,13 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 6,
+        "h": 9,
         "w": 3,
         "x": 12,
         "y": 11
       },
       "hideTimeOverride": true,
-      "id": 2,
+      "id": 9,
       "interval": "2h",
       "options": {
         "colorMode": "value",
@@ -639,19 +680,23 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
+        "showPercentChange": false,
         "text": {},
-        "textMode": "auto"
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "9.5.6",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "uid": "${DATA_SOURCE}"
           },
           "editorMode": "code",
           "expr": "count(container_last_seen{container_label_com_docker_swarm_service_id=~\".+\"})",
@@ -667,7 +712,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
+        "uid": "${DATA_SOURCE}"
       },
       "fieldConfig": {
         "defaults": {
@@ -675,6 +720,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -688,6 +734,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "smooth",
             "lineWidth": 1,
             "pointSize": 5,
@@ -722,12 +769,12 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 10,
+        "h": 9,
         "w": 9,
         "x": 15,
         "y": 11
       },
-      "id": 3,
+      "id": 10,
       "interval": "4m",
       "options": {
         "legend": {
@@ -746,7 +793,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "uid": "${DATA_SOURCE}"
           },
           "editorMode": "code",
           "expr": "sum(rate(node_cpu_seconds_total{job=\"nasticot\", mode!=\"idle\"}[$__rate_interval])) / on(instance) group_left sum(rate(node_cpu_seconds_total{job=\"nasticot\"}[$__rate_interval])) * 100",
@@ -757,7 +804,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "uid": "${DATA_SOURCE}"
           },
           "editorMode": "code",
           "expr": "sum(rate(node_cpu_seconds_total{job=\"bananas\", mode!=\"idle\"}[$__rate_interval])) / on(instance) group_left sum(rate(node_cpu_seconds_total{job=\"bananas\"}[$__rate_interval])) * 100",
@@ -772,21 +819,37 @@
       "type": "timeseries"
     }
   ],
-  "refresh": "",
-  "schemaVersion": 38,
-  "style": "dark",
+  "schemaVersion": 39,
   "tags": [],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "default",
+          "value": "default"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "DATA_SOURCE",
+        "options": [],
+        "query": "prometheus",
+        "queryValue": "",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      }
+    ]
   },
   "time": {
-    "from": "2024-03-13T07:26:35.222Z",
-    "to": "2024-03-14T07:26:35.222Z"
+    "from": "now-6h",
+    "to": "now"
   },
   "timepicker": {},
-  "timezone": "",
+  "timezone": "browser",
   "title": "Main dashboard",
-  "uid": "cff5d7ec-b3e4-4a11-84aa-26dd73cd6c15",
-  "version": 1,
+  "version": 0,
   "weekStart": ""
 }

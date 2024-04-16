@@ -1,9 +1,0 @@
-apiVersion: 1
-
-providers:
-  - name: Minecraft
-    type: file
-    folder: Minecraft
-    updateIntervalSeconds: 30
-    options:
-      path: /var/lib/grafana/dashboards/minecraft
