@@ -15,7 +15,7 @@ configs:
 
 services:
   dockerproxy:
-    image: tecnativa/docker-socket-proxy
+    image: tecnativa/docker-socket-proxy:0.1
     environment:
       - CONTAINERS=1
       - EXEC=1
@@ -34,7 +34,7 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock"
 
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.47.2
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /:/rootfs:ro
@@ -42,7 +42,7 @@ services:
       - /sys:/sys:ro
       - /var/lib/docker:/var/lib/docker:ro
       - /etc/machine-id:/etc/machine-id:ro
-    privileged: true # TODO: Ne sert à rien dans swarm (pour l'instant), MR en cours chez Docker (peut-être pour jamais)
+    # privileged: true # TODO: Ne sert à rien dans swarm (pour l'instant), MR en cours chez Docker (peut-être pour jamais)
     # devices: # TODO: Attendre la prochaine release de Docker pour avoir accès à kmsg pour raspi 4
     #   - /dev/kmsg:/dev/kmsg
     networks:
@@ -57,7 +57,7 @@ services:
         prometheus-job: cadvisor
 
   nodeexporter:
-    image: prom/node-exporter:v1.6.1
+    image: prom/node-exporter:v1.7.0
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
@@ -66,11 +66,10 @@ services:
       - cloud-monitoring
 
   prometheus:
-    image: prom/prometheus:v2.46.0
+    image: prom/prometheus:v2.51.2
     networks:
       - cloud-camembert
       - cloud-monitoring
-      - cloud-public # TODO: Remove this
     volumes:
       - prometheus:/prometheus
     configs:
